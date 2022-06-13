@@ -3,7 +3,7 @@ use sdl2::keyboard::Keycode;
 use sdl2::keyboard::Mod;
 use sdl2::mouse::{Cursor, MouseButton, SystemCursor};
 use sdl2::video::Window;
-use egui::{Context, FontDefinitions, FullOutput, Key, Modifiers, PointerButton, Pos2, RawInput, Rect, Rgba};
+use egui::{Key, Modifiers, PointerButton, Pos2, RawInput, Rect};
 
 pub struct FusedCursor {
     pub cursor: sdl2::mouse::Cursor,
@@ -271,7 +271,7 @@ impl EguiSDL2State {
 
     pub fn update_screen_rect(&mut self, width: u32, height: u32) {
         let inv_scale = 1.0 / self.dpi_scaling;
-        let rect = (egui::vec2(width as f32 * inv_scale, height as f32 * inv_scale));
+        let rect = egui::vec2(width as f32 * inv_scale, height as f32 * inv_scale);
         self.raw_input.screen_rect = Some(Rect::from_min_size(Pos2::new(0f32, 0f32), rect));
     }
 
@@ -282,7 +282,7 @@ impl EguiSDL2State {
 
     pub fn new(width: u32, height: u32, dpi_scaling: f32) -> Self {
         let inv_scale = 1.0 / dpi_scaling;
-        let rect = (egui::vec2(width as f32 * inv_scale, height as f32 * inv_scale));
+        let rect = egui::vec2(width as f32 * inv_scale, height as f32 * inv_scale);
         let screen_rect = Rect::from_min_size(Pos2::new(0f32, 0f32), rect);
         let raw_input = RawInput {
             screen_rect: Some(screen_rect),
