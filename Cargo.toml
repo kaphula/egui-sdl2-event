@@ -5,8 +5,9 @@ version = "0.1.0"
 edition = "2021"
 keywords = ["sdl2", "egui"]
 categories = ["gui", "input"]
-license = ["MIT"]
+license = "MIT"
 readme = "README.md"
+
 
 [dependencies]
 sdl2 = "0.35.2"
