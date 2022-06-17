@@ -8,3 +8,5 @@ the [egui-wgpu](https://github.com/emilk/egui/tree/master/egui-wgpu) backend.
 Most of the code is just adaptively copied from [egui_sdl2_gl](https://github.com/ArjunNair/egui_sdl2_gl)
 
 Simple [example](https://github.com/kaphula/egui-sdl2-event-example) program.
+
+[crates.io link](https://crates.io/crates/egui-sdl2-event)
