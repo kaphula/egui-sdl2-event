@@ -128,8 +128,6 @@ impl EguiSDL2State {
             // handle when window Resized and SizeChanged.
             Window { win_event, .. } => match win_event {
                 WindowEvent::Resized(x, y) | sdl2::event::WindowEvent::SizeChanged(x, y) => {
-                    // let drs = window.drawable_size(); // ??
-                    // self.update_screen_rect(drs.0, drs.1, &window);
                     self.update_screen_rect(*x as u32, *y as u32);
                 }
                 _ => (),
