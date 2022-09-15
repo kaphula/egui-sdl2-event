@@ -10,3 +10,8 @@ Most of the code is just adaptively copied from [egui_sdl2_gl](https://github.co
 Simple [example](https://github.com/kaphula/egui-sdl2-event-example) program.
 
 [crates.io link](https://crates.io/crates/egui-sdl2-event)
+
+## Related
+
+You might be interested in checking out [egui_sdl2_platform](https://crates.io/crates/egui_sdl2_platform) as it seems to
+be doing the same job.
