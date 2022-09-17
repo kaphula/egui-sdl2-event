@@ -1,9 +1,9 @@
+use egui::{Key, Modifiers, PointerButton, Pos2, RawInput, Rect};
 use sdl2::event::WindowEvent;
 use sdl2::keyboard::Keycode;
 use sdl2::keyboard::Mod;
 use sdl2::mouse::{Cursor, MouseButton, SystemCursor};
 use sdl2::video::Window;
-use egui::{Key, Modifiers, PointerButton, Pos2, RawInput, Rect};
 
 pub struct FusedCursor {
     pub cursor: sdl2::mouse::Cursor,
@@ -100,16 +100,7 @@ pub struct EguiSDL2State {
 }
 
 impl EguiSDL2State {
-
-
-
-    pub fn sdl2_input_to_egui(
-        &mut self,
-        window: &sdl2::video::Window,
-        event: &sdl2::event::Event,
-    ) {
-
-
+    pub fn sdl2_input_to_egui(&mut self, window: &sdl2::video::Window, event: &sdl2::event::Event) {
         fn sdl_button_to_egui(btn: &MouseButton) -> Option<PointerButton> {
             match btn {
                 MouseButton::Left => Some(egui::PointerButton::Primary),
@@ -155,8 +146,11 @@ impl EguiSDL2State {
             }
 
             MouseMotion { x, y, .. } => {
-                self.mouse_pointer_position = egui::pos2(*x as f32 / pixels_per_point, *y as f32 / pixels_per_point);
-                self.raw_input.events.push(egui::Event::PointerMoved(self.mouse_pointer_position));
+                self.mouse_pointer_position =
+                    egui::pos2(*x as f32 / pixels_per_point, *y as f32 / pixels_per_point);
+                self.raw_input
+                    .events
+                    .push(egui::Event::PointerMoved(self.mouse_pointer_position));
             }
 
             KeyUp {
@@ -254,18 +248,19 @@ impl EguiSDL2State {
                 else if sdl.keyboard().mod_state() & Mod::LSHIFTMOD == Mod::LSHIFTMOD
                     || sdl.keyboard().mod_state() & Mod::RSHIFTMOD == Mod::RSHIFTMOD
                 {
-                    self.raw_input.events
+                    self.raw_input
+                        .events
                         .push(egui::Event::Scroll(egui::vec2(delta.x + delta.y, 0.0)));
                     // regular scroll:
                 } else {
-                    self.raw_input.events.push(egui::Event::Scroll(egui::vec2(delta.x, delta.y)));
+                    self.raw_input
+                        .events
+                        .push(egui::Event::Scroll(egui::vec2(delta.x, delta.y)));
                 }
             }
-            _ => {
-            }
+            _ => {}
         }
     }
-
 
     pub fn update_screen_rect(&mut self, width: u32, height: u32) {
         let inv_scale = 1.0 / self.dpi_scaling;
@@ -289,11 +284,11 @@ impl EguiSDL2State {
         };
         let modifiers = Modifiers::default();
         EguiSDL2State {
-            raw_input: raw_input,
-            modifiers: modifiers,
-            dpi_scaling: dpi_scaling,
-            mouse_pointer_position: egui::Pos2::new(0.0,0.0),
-            fused_cursor: FusedCursor::new()
+            raw_input,
+            modifiers,
+            dpi_scaling,
+            mouse_pointer_position: egui::Pos2::new(0.0, 0.0),
+            fused_cursor: FusedCursor::new(),
         }
     }
 
