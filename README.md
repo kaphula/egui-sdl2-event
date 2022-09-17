@@ -14,7 +14,7 @@ Simple [example](https://github.com/kaphula/egui-sdl2-event-example) program.
 ## Related
 
 You might be interested in checking out [egui_sdl2_platform](https://crates.io/crates/egui_sdl2_platform) as it seems to
-be doing the same job with the exception that `egui_sdl2_platform` depends
+be doing the same job with more simplicity. `egui_sdl2_platform` depends
 on [egui_wgpu_backend](https://github.com/hasenbanck/egui_wgpu_backend) whereas `egui-sdl2-event` depends directly on
 the internal egui's wgpu implementation [egui-wgpu](https://github.com/emilk/egui/tree/master/crates/egui-wgpu
 ).
