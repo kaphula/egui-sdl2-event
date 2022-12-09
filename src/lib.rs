@@ -98,18 +98,36 @@ pub struct EguiSDL2State {
     start_time: std::time::Instant,
     raw_input: RawInput,
     modifiers: Modifiers,
-    dpi_scaling: f32,
+    dpi_mode: DpiMode,
     mouse_pointer_position: egui::Pos2,
     fused_cursor: FusedCursor,
 }
 
-pub fn get_dpi(window: &Window, video_subsystem: &VideoSubsystem) -> f32 {
+pub enum DpiMode {
+    Sdl(f32),
+    Manual(f32),
+}
+
+impl DpiMode {
+    pub fn dpi(&self) -> f32 {
+        match self {
+            DpiMode::Sdl(dpi) => {*dpi}
+            DpiMode::Manual(dpi) => {*dpi}
+        }
+    }
+}
+
+pub fn get_dpi(window: &Window, video_subsystem: &VideoSubsystem) -> DpiMode {
     if cfg!(not(target_os = "linux")) {
-        window.drawable_size().0 as f32 / window.size().0 as f32
+        // This seems to be the recommended way to get the dpi
+        // https://wiki.libsdl.org/SDL2/SDL_GetDisplayDPI
+        DpiMode::Sdl(window.drawable_size().0 as f32 / window.size().0 as f32)
     } else {
-        video_subsystem.display_dpi(window.display_index().unwrap_or(0))
+        // Unfortunately it won't work on linux because the allow_highdpi seems to be ignored,
+        // so we have to do this workaround
+        DpiMode::Manual(video_subsystem.display_dpi(window.display_index().unwrap_or(0))
             .map(|(_, dpi, _)| dpi / 96.0)
-            .unwrap_or(1.0)
+            .unwrap_or(1.0))
     }
 }
 
@@ -158,8 +176,13 @@ impl EguiSDL2State {
             }
 
             MouseMotion { x, y, .. } => {
+                let factor = match self.dpi_mode {
+                    DpiMode::Sdl(_) => {1.0}
+                    DpiMode::Manual(dpi) => {dpi}
+                };
+
                 self.mouse_pointer_position =
-                    egui::pos2(*x as f32 / self.dpi_scaling, *y as f32 / self.dpi_scaling);
+                    egui::pos2(*x as f32 / factor, *y as f32 / factor);
                 self.raw_input
                     .events
                     .push(egui::Event::PointerMoved(self.mouse_pointer_position));
@@ -283,7 +306,7 @@ impl EguiSDL2State {
     pub fn take_egui_input(&mut self, window: &Window) -> RawInput {
         self.raw_input.time = Some(self.start_time.elapsed().as_secs_f64());
 
-        let pixels_per_point = self.dpi_scaling;
+        let pixels_per_point = self.dpi_mode.dpi();
 
         let drawable_size = window.drawable_size();
         let screen_size_in_points = egui::vec2(drawable_size.0 as f32, drawable_size.1 as f32) / pixels_per_point;
@@ -303,9 +326,9 @@ impl EguiSDL2State {
     }
 
 
-    pub fn new(pixels_per_point: f32) -> Self {
+    pub fn new(dpi_mode: DpiMode) -> Self {
         let raw_input = RawInput {
-            pixels_per_point: Some(pixels_per_point),
+            pixels_per_point: Some(dpi_mode.dpi()),
             ..RawInput::default()
         };
         let modifiers = Modifiers::default();
@@ -313,7 +336,7 @@ impl EguiSDL2State {
             start_time: Instant::now(),
             raw_input,
             modifiers,
-            dpi_scaling: pixels_per_point,
+            dpi_mode,
             mouse_pointer_position: egui::Pos2::new(0.0, 0.0),
             fused_cursor: FusedCursor::new(),
         }
