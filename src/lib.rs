@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use egui::{Key, Modifiers, PointerButton, Pos2, RawInput, Rect};
 use sdl2::event::WindowEvent;
 use sdl2::keyboard::Keycode;
@@ -92,11 +94,12 @@ pub fn translate_virtual_key_code(key: sdl2::keyboard::Keycode) -> Option<egui::
 }
 
 pub struct EguiSDL2State {
-    pub raw_input: RawInput,
-    pub modifiers: Modifiers,
-    pub dpi_scaling: f32,
-    pub mouse_pointer_position: egui::Pos2,
-    pub fused_cursor: FusedCursor,
+    start_time: std::time::Instant,
+    raw_input: RawInput,
+    modifiers: Modifiers,
+    dpi_scaling: f32,
+    mouse_pointer_position: egui::Pos2,
+    fused_cursor: FusedCursor,
 }
 
 impl EguiSDL2State {
@@ -111,7 +114,6 @@ impl EguiSDL2State {
         }
 
         use sdl2::event::Event::*;
-        let pixels_per_point = self.dpi_scaling;
         if event.get_window_id() != Some(window.id()) {
             return;
         }
@@ -119,13 +121,12 @@ impl EguiSDL2State {
             // handle when window Resized and SizeChanged.
             Window { win_event, .. } => match win_event {
                 WindowEvent::Resized(x, y) | sdl2::event::WindowEvent::SizeChanged(x, y) => {
-                    self.update_screen_rect(*x as u32, *y as u32);
+                    self.update_screen_rect(window);
                 }
                 _ => (),
             },
             MouseButtonDown { mouse_btn, .. } => {
                 if let Some(pressed) = sdl_button_to_egui(mouse_btn) {
-                    println!("press event!");
                     self.raw_input.events.push(egui::Event::PointerButton {
                         pos: self.mouse_pointer_position,
                         button: pressed,
@@ -147,7 +148,7 @@ impl EguiSDL2State {
 
             MouseMotion { x, y, .. } => {
                 self.mouse_pointer_position =
-                    egui::pos2(*x as f32 / pixels_per_point, *y as f32 / pixels_per_point);
+                    egui::pos2(*x as f32, *y as f32);
                 self.raw_input
                     .events
                     .push(egui::Event::PointerMoved(self.mouse_pointer_position));
@@ -262,31 +263,50 @@ impl EguiSDL2State {
         }
     }
 
-    pub fn update_screen_rect(&mut self, width: u32, height: u32) {
-        let inv_scale = 1.0 / self.dpi_scaling;
-        let rect = egui::vec2(width as f32 * inv_scale, height as f32 * inv_scale);
+    pub fn update_screen_rect(&mut self, window: &Window) {
+        self.dpi_scaling = EguiSDL2State::get_pixels_per_point(window);
+        let size = window.size();
+        let rect = egui::vec2(size.0 as f32, size.1 as f32);
         self.raw_input.screen_rect = Some(Rect::from_min_size(Pos2::new(0f32, 0f32), rect));
     }
 
-    pub fn update_time(&mut self, running_time: Option<f64>, delta: f32) {
-        self.raw_input.time = running_time;
-        self.raw_input.predicted_dt = delta;
+    pub fn take_egui_input(&mut self, window: &Window) -> RawInput {
+        self.raw_input.time = Some(self.start_time.elapsed().as_secs_f64());
+
+        let pixels_per_point = self.dpi_scaling;
+
+        let drawable_size = window.drawable_size();
+        let screen_size_in_points = egui::vec2(drawable_size.0 as f32, drawable_size.1 as f32) / pixels_per_point;
+
+        self.raw_input.screen_rect =
+            if screen_size_in_points.x > 0.0 && screen_size_in_points.y > 0.0 {
+                Some(egui::Rect::from_min_size(
+                    egui::Pos2::ZERO,
+                    screen_size_in_points,
+                ))
+            } else {
+                None
+            };
+
+        self.raw_input.take()
     }
 
-    pub fn new(width: u32, height: u32, dpi_scaling: f32) -> Self {
-        let inv_scale = 1.0 / dpi_scaling;
-        let rect = egui::vec2(width as f32 * inv_scale, height as f32 * inv_scale);
-        let screen_rect = Rect::from_min_size(Pos2::new(0f32, 0f32), rect);
+    fn get_pixels_per_point(window: &Window) -> f32 {
+        window.drawable_size().0 as f32 / window.size().0 as f32
+    }
+
+    pub fn new(window: &Window) -> Self {
+        let pixels_per_point = EguiSDL2State::get_pixels_per_point(window);
         let raw_input = RawInput {
-            screen_rect: Some(screen_rect),
-            pixels_per_point: Some(dpi_scaling),
+            pixels_per_point: Some(pixels_per_point),
             ..RawInput::default()
         };
         let modifiers = Modifiers::default();
         EguiSDL2State {
+            start_time: Instant::now(),
             raw_input,
             modifiers,
-            dpi_scaling,
+            dpi_scaling: pixels_per_point,
             mouse_pointer_position: egui::Pos2::new(0.0, 0.0),
             fused_cursor: FusedCursor::new(),
         }
