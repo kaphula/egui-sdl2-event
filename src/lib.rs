@@ -6,6 +6,7 @@ use sdl2::keyboard::Keycode;
 use sdl2::keyboard::Mod;
 use sdl2::mouse::{Cursor, MouseButton, SystemCursor};
 use sdl2::video::Window;
+use sdl2::VideoSubsystem;
 
 pub struct FusedCursor {
     pub cursor: sdl2::mouse::Cursor,
@@ -102,6 +103,16 @@ pub struct EguiSDL2State {
     fused_cursor: FusedCursor,
 }
 
+pub fn get_dpi(window: &Window, video_subsystem: &VideoSubsystem) -> f32 {
+    if cfg!(not(target_os = "linux")) {
+        window.drawable_size().0 as f32 / window.size().0 as f32
+    } else {
+        video_subsystem.display_dpi(window.display_index().unwrap_or(0))
+            .map(|(_, dpi, _)| dpi / 96.0)
+            .unwrap_or(1.0)
+    }
+}
+
 impl EguiSDL2State {
     pub fn sdl2_input_to_egui(&mut self, window: &sdl2::video::Window, event: &sdl2::event::Event) {
         fn sdl_button_to_egui(btn: &MouseButton) -> Option<PointerButton> {
@@ -148,7 +159,7 @@ impl EguiSDL2State {
 
             MouseMotion { x, y, .. } => {
                 self.mouse_pointer_position =
-                    egui::pos2(*x as f32, *y as f32);
+                    egui::pos2(*x as f32 / self.dpi_scaling, *y as f32 / self.dpi_scaling);
                 self.raw_input
                     .events
                     .push(egui::Event::PointerMoved(self.mouse_pointer_position));
@@ -264,7 +275,6 @@ impl EguiSDL2State {
     }
 
     pub fn update_screen_rect(&mut self, window: &Window) {
-        self.dpi_scaling = EguiSDL2State::get_pixels_per_point(window);
         let size = window.size();
         let rect = egui::vec2(size.0 as f32, size.1 as f32);
         self.raw_input.screen_rect = Some(Rect::from_min_size(Pos2::new(0f32, 0f32), rect));
@@ -278,6 +288,7 @@ impl EguiSDL2State {
         let drawable_size = window.drawable_size();
         let screen_size_in_points = egui::vec2(drawable_size.0 as f32, drawable_size.1 as f32) / pixels_per_point;
 
+        self.raw_input.pixels_per_point = Some(pixels_per_point);
         self.raw_input.screen_rect =
             if screen_size_in_points.x > 0.0 && screen_size_in_points.y > 0.0 {
                 Some(egui::Rect::from_min_size(
@@ -291,12 +302,8 @@ impl EguiSDL2State {
         self.raw_input.take()
     }
 
-    fn get_pixels_per_point(window: &Window) -> f32 {
-        window.drawable_size().0 as f32 / window.size().0 as f32
-    }
 
-    pub fn new(window: &Window) -> Self {
-        let pixels_per_point = EguiSDL2State::get_pixels_per_point(window);
+    pub fn new(pixels_per_point: f32) -> Self {
         let raw_input = RawInput {
             pixels_per_point: Some(pixels_per_point),
             ..RawInput::default()
