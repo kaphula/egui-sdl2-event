@@ -14,4 +14,4 @@ homepage = "https://github.com/kaphula/egui-sdl2-event"
 
 [dependencies]
 sdl2 = "0.35.2"
-egui = { version = "0.19.0" }
+egui = { version = ">=0.19" }
