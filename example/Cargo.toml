@@ -1,0 +1,17 @@
+[package]
+name = "example"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+sdl2 = {version= "0.35.2", features = ["raw-window-handle", "static-link", "use-pkgconfig"] }
+egui-sdl2-event = { path = "../egui-sdl2-event"}
+egui-wgpu = "0.19.0"
+egui = "0.19.0"
+wgpu = "0.13.0"
+pollster = "0.2.5"
+
+
+

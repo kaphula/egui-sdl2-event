@@ -98,36 +98,58 @@ pub struct EguiSDL2State {
     start_time: std::time::Instant,
     raw_input: RawInput,
     modifiers: Modifiers,
-    dpi_mode: DpiMode,
+    dpi_data: DpiData,
     mouse_pointer_position: egui::Pos2,
     fused_cursor: FusedCursor,
 }
 
 pub enum DpiMode {
-    Sdl(f32),
-    Manual(f32),
+    /// The correct dpi value of the UI will be calculated automatically based on your system settings.
+    Auto,
+    /// Same as `DpiMode::Auto` but uses a custom scaling factor. Negative or zero scaling factor will result in panic.
+    AutoScaled(f32),
+    /// Uses custom dpi value directly.
+    Custom(f32),
 }
 
-impl DpiMode {
-    pub fn dpi(&self) -> f32 {
-        match self {
-            DpiMode::Sdl(dpi) => {*dpi}
-            DpiMode::Manual(dpi) => {*dpi}
-        }
+struct DpiData {
+    dpi: f32,
+    scale: f32,
+    apply_to_mouse_position: bool,
+}
+
+impl DpiData {
+    fn scaled_dpi(&self) -> f32 {
+        self.dpi * self.scale
     }
 }
 
-pub fn get_dpi(window: &Window, video_subsystem: &VideoSubsystem) -> DpiMode {
-    if cfg!(not(target_os = "linux")) {
-        // This seems to be the recommended way to get the dpi
-        // https://wiki.libsdl.org/SDL2/SDL_GetDisplayDPI
-        DpiMode::Sdl(window.drawable_size().0 as f32 / window.size().0 as f32)
-    } else {
+fn should_scale_input() -> bool {
+    cfg!(target_os = "linux")
+}
+
+fn get_auto_dpi(window: &Window, video_subsystem: &VideoSubsystem, scale: f32) -> DpiData {
+    if should_scale_input() {
         // Unfortunately it won't work on linux because the allow_highdpi seems to be ignored,
         // so we have to do this workaround
-        DpiMode::Manual(video_subsystem.display_dpi(window.display_index().unwrap_or(0))
+        let dpi = video_subsystem
+            .display_dpi(window.display_index().unwrap_or(0))
             .map(|(_, dpi, _)| dpi / 96.0)
-            .unwrap_or(1.0))
+            .unwrap_or(1.0);
+
+        DpiData {
+            dpi: (window.drawable_size().0 as f32 / window.size().0 as f32),
+            scale: scale,
+            apply_to_mouse_position: true,
+        }
+    } else {
+        // This seems to be the recommended way to get the dpi
+        // https://wiki.libsdl.org/SDL2/SDL_GetDisplayDPI
+        DpiData {
+            dpi: (window.drawable_size().0 as f32 / window.size().0 as f32),
+            scale: scale,
+            apply_to_mouse_position: false,
+        }
     }
 }
 
@@ -176,13 +198,13 @@ impl EguiSDL2State {
             }
 
             MouseMotion { x, y, .. } => {
-                let factor = match self.dpi_mode {
-                    DpiMode::Sdl(_) => {1.0}
-                    DpiMode::Manual(dpi) => {dpi}
+                let factor = if self.dpi_data.apply_to_mouse_position {
+                    self.dpi_data.scale
+                } else {
+                    1.0
                 };
 
-                self.mouse_pointer_position =
-                    egui::pos2(*x as f32 / factor, *y as f32 / factor);
+                self.mouse_pointer_position = egui::pos2(*x as f32 / factor, *y as f32 / factor);
                 self.raw_input
                     .events
                     .push(egui::Event::PointerMoved(self.mouse_pointer_position));
@@ -306,10 +328,11 @@ impl EguiSDL2State {
     pub fn take_egui_input(&mut self, window: &Window) -> RawInput {
         self.raw_input.time = Some(self.start_time.elapsed().as_secs_f64());
 
-        let pixels_per_point = self.dpi_mode.dpi();
+        let pixels_per_point = self.dpi_data.scaled_dpi();
 
         let drawable_size = window.drawable_size();
-        let screen_size_in_points = egui::vec2(drawable_size.0 as f32, drawable_size.1 as f32) / pixels_per_point;
+        let screen_size_in_points =
+            egui::vec2(drawable_size.0 as f32, drawable_size.1 as f32) / pixels_per_point;
 
         self.raw_input.pixels_per_point = Some(pixels_per_point);
         self.raw_input.screen_rect =
@@ -325,18 +348,36 @@ impl EguiSDL2State {
         self.raw_input.take()
     }
 
-
-    pub fn new(dpi_mode: DpiMode) -> Self {
+    /// Creates new EguiSDL2State.
+    ///
+    /// Panics if `DpiMode::AutoScaled` value is zero or less than zero.
+    pub fn new(window: &Window, video_subsystem: &VideoSubsystem, dpi_mode: DpiMode) -> Self {
+        let dpi = match dpi_mode {
+            DpiMode::Auto => get_auto_dpi(window, video_subsystem, 1.0),
+            DpiMode::AutoScaled(scale) => {
+                assert!(
+                    scale > 0.0,
+                    "AutoScaled scale value cannot be zero or negative!"
+                );
+                get_auto_dpi(window, video_subsystem, scale)
+            }
+            DpiMode::Custom(c) => DpiData {
+                dpi: c,
+                scale: 1.0,
+                apply_to_mouse_position: should_scale_input(),
+            },
+        };
         let raw_input = RawInput {
-            pixels_per_point: Some(dpi_mode.dpi()),
+            pixels_per_point: Some(dpi.dpi),
             ..RawInput::default()
         };
         let modifiers = Modifiers::default();
+
         EguiSDL2State {
             start_time: Instant::now(),
             raw_input,
             modifiers,
-            dpi_mode,
+            dpi_data: dpi,
             mouse_pointer_position: egui::Pos2::new(0.0, 0.0),
             fused_cursor: FusedCursor::new(),
         }
@@ -382,5 +423,20 @@ impl EguiSDL2State {
             fused.icon = tmp_icon;
             fused.cursor.set();
         }
+    }
+
+    /// Gets the current dpi value including scaling.
+    pub fn dpi(&self) -> f32 {
+        self.dpi_data.scaled_dpi()
+    }
+
+    /// Gets the current dpi value not including scaling.
+    pub fn dpi_without_scaling(&self) -> f32 {
+        self.dpi_data.dpi
+    }
+
+    /// Gets the dpi scaling factor.
+    pub fn dpi_scale_factor(&self) -> f32 {
+        self.dpi_data.scale
     }
 }
