@@ -138,7 +138,7 @@ fn get_auto_dpi(window: &Window, video_subsystem: &VideoSubsystem, scale: f32) -
             .unwrap_or(1.0);
 
         DpiData {
-            dpi: (window.drawable_size().0 as f32 / window.size().0 as f32),
+            dpi: dpi,
             scale: scale,
             apply_to_mouse_position: true,
         }
