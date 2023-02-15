@@ -211,7 +211,7 @@ impl EguiSDL2State {
             }
 
             KeyUp {
-                keycode, keymod, ..
+                keycode, keymod, repeat, ..
             } => {
                 let key_code = match keycode {
                     Some(key_code) => key_code,
@@ -238,12 +238,13 @@ impl EguiSDL2State {
                 self.raw_input.events.push(egui::Event::Key {
                     key,
                     pressed: false,
+                    repeat: *repeat,
                     modifiers: self.modifiers,
                 });
             }
 
             KeyDown {
-                keycode, keymod, ..
+                keycode, keymod, repeat, ..
             } => {
                 let key_code = match keycode {
                     Some(key_code) => key_code,
@@ -271,6 +272,7 @@ impl EguiSDL2State {
                 self.raw_input.events.push(egui::Event::Key {
                     key,
                     pressed: true,
+                    repeat: *repeat,
                     modifiers: self.modifiers,
                 });
 
