@@ -98,6 +98,7 @@ pub struct EguiSDL2State {
     start_time: std::time::Instant,
     raw_input: RawInput,
     modifiers: Modifiers,
+    dpi_mode: DpiMode,
     dpi_data: DpiData,
     mouse_pointer_position: egui::Pos2,
     fused_cursor: FusedCursor,
@@ -110,6 +111,26 @@ pub enum DpiMode {
     AutoScaled(f32),
     /// Uses custom dpi value directly.
     Custom(f32),
+}
+
+impl DpiMode {
+    fn get_dpi(&self, window: &Window, video_subsystem: &VideoSubsystem) -> DpiData {
+        match &self {
+            DpiMode::Auto => get_auto_dpi(window, video_subsystem, 1.0),
+            DpiMode::AutoScaled(scale) => {
+                assert!(
+                    scale > &0.0,
+                    "AutoScaled scale value cannot be zero or negative!"
+                );
+                get_auto_dpi(window, video_subsystem, *scale)
+            }
+            DpiMode::Custom(c) => DpiData {
+                dpi: *c,
+                scale: 1.0,
+                apply_to_mouse_position: should_scale_input(),
+            },
+        }
+    }
 }
 
 struct DpiData {
@@ -173,6 +194,7 @@ impl EguiSDL2State {
             Window { win_event, .. } => match win_event {
                 WindowEvent::Resized(x, y) | sdl2::event::WindowEvent::SizeChanged(x, y) => {
                     self.update_screen_rect(window);
+                    self.dpi_data = self.dpi_mode.get_dpi(window, window.subsystem());
                 }
                 _ => (),
             },
@@ -354,23 +376,9 @@ impl EguiSDL2State {
     ///
     /// Panics if `DpiMode::AutoScaled` value is zero or less than zero.
     pub fn new(window: &Window, video_subsystem: &VideoSubsystem, dpi_mode: DpiMode) -> Self {
-        let dpi = match dpi_mode {
-            DpiMode::Auto => get_auto_dpi(window, video_subsystem, 1.0),
-            DpiMode::AutoScaled(scale) => {
-                assert!(
-                    scale > 0.0,
-                    "AutoScaled scale value cannot be zero or negative!"
-                );
-                get_auto_dpi(window, video_subsystem, scale)
-            }
-            DpiMode::Custom(c) => DpiData {
-                dpi: c,
-                scale: 1.0,
-                apply_to_mouse_position: should_scale_input(),
-            },
-        };
+        let dpi_data = dpi_mode.get_dpi(window, video_subsystem);
         let raw_input = RawInput {
-            pixels_per_point: Some(dpi.dpi),
+            pixels_per_point: Some(dpi_data.dpi),
             ..RawInput::default()
         };
         let modifiers = Modifiers::default();
@@ -379,7 +387,8 @@ impl EguiSDL2State {
             start_time: Instant::now(),
             raw_input,
             modifiers,
-            dpi_data: dpi,
+            dpi_mode,
+            dpi_data,
             mouse_pointer_position: egui::Pos2::new(0.0, 0.0),
             fused_cursor: FusedCursor::new(),
         }
