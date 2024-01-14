@@ -181,6 +181,7 @@ impl EguiSDL2State {
                 self.raw_input.events.push(egui::Event::Key {
                     key,
                     pressed: false,
+                    repeat: false,
                     modifiers: self.modifiers,
                 });
             }
@@ -214,6 +215,7 @@ impl EguiSDL2State {
                 self.raw_input.events.push(egui::Event::Key {
                     key,
                     pressed: true,
+                    repeat: false,
                     modifiers: self.modifiers,
                 });
 
@@ -279,7 +281,6 @@ impl EguiSDL2State {
         let screen_rect = Rect::from_min_size(Pos2::new(0f32, 0f32), rect);
         let raw_input = RawInput {
             screen_rect: Some(screen_rect),
-            pixels_per_point: Some(dpi_scaling),
             ..RawInput::default()
         };
         let modifiers = Modifiers::default();
