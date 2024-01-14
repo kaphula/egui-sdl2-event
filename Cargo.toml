@@ -1,17 +1,6 @@
-[package]
-name = "egui-sdl2-event"
-authors = ["Valtteri Vallius"]
-version = "0.2.2"
-edition = "2021"
-keywords = ["sdl2", "egui"]
-categories = ["gui", "input"]
-description = "Provides event handling for egui in SDL2 window applications."
-license = "MIT"
-readme = "README.md"
-repository = "https://github.com/kaphula/egui-sdl2-event"
-homepage = "https://github.com/kaphula/egui-sdl2-event"
-
-
-[dependencies]
-sdl2 = "0.35.2"
-egui = { version = "0.19.0" }
+[workspace]
+resolver = "2"
+members = [
+    "egui-sdl2-event",
+    "example"
+]
