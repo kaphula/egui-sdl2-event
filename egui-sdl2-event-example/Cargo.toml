@@ -5,7 +5,6 @@ edition = "2021"
 
 [dependencies]
 sdl2 = {version= "0.36.0", features = ["raw-window-handle", "static-link", "use-pkgconfig"] }
-# egui-sdl2-event = { git = "https://github.com/Manorhos/egui-sdl2-event", rev = "14dc0f26" }
 egui-sdl2-event = { path = "../lib" }
 egui-wgpu = "0.24.1"
 egui = "0.24.1"
