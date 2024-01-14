@@ -9,7 +9,7 @@ use egui_wgpu::renderer::Renderer;
 use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::Keycode;
 use sdl2::video::Window;
-use sdl2::{Sdl, VideoSubsystem};
+use sdl2::Sdl;
 use std::sync::Arc;
 use wgpu::{Device, Queue, Surface, SurfaceConfiguration};
 
@@ -22,7 +22,6 @@ struct WGPUSDL2 {
     device: Device,
     queue: Queue,
     sdl_context: Sdl,
-    sdl_video_subsystem: VideoSubsystem,
     surface_config: SurfaceConfiguration,
 }
 
@@ -67,7 +66,6 @@ fn init_sdl(width: u32, height: u32) -> WGPUSDL2 {
 
     WGPUSDL2 {
         sdl_context,
-        sdl_video_subsystem: video_subsystem,
         sdl_window: window,
         surface,
         surface_config: config,

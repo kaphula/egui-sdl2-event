@@ -1,6 +1,5 @@
 use sdl2::sys::Uint32;
 pub struct FrameTimer {
-    last_time: u32,
     frame_time: u32,
     delta: f32,
     start: u32,
@@ -11,7 +10,6 @@ pub const MS_TO_SECONDS: f32 = 1.0 / 1000.0;
 impl FrameTimer {
     pub fn new() -> FrameTimer {
         FrameTimer {
-            last_time: 0,
             frame_time: 0,
             delta: 0.0,
             start: 0,
