@@ -124,7 +124,6 @@ impl EguiSDL2State {
             },
             MouseButtonDown { mouse_btn, .. } => {
                 if let Some(pressed) = sdl_button_to_egui(mouse_btn) {
-                    println!("press event!");
                     self.raw_input.events.push(egui::Event::PointerButton {
                         pos: self.mouse_pointer_position,
                         button: pressed,
