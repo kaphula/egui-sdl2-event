@@ -111,7 +111,13 @@ fn paint_and_update_textures(
             renderer.update_texture(device, queue, *id, image_delta);
         }
 
-        renderer.update_buffers(device, queue, &mut encoder, clipped_primitives, &screen_descriptor);
+        renderer.update_buffers(
+            device,
+            queue,
+            &mut encoder,
+            clipped_primitives,
+            &screen_descriptor,
+        );
     }
 
     {
