@@ -7,9 +7,7 @@ the [egui-wgpu](https://github.com/emilk/egui/tree/master/crates/egui-wgpu) back
 
 Most of the code is just adaptively copied from [egui_sdl2_gl](https://github.com/ArjunNair/egui_sdl2_gl)
 
-Simple [example](https://github.com/kaphula/egui-sdl2-event-example) program.
-
-[crates.io link](https://crates.io/crates/egui-sdl2-event)
+Simple [example](https://github.com/kaphula/egui-sdl2-event/tree/master/egui-sdl2-event-example) program.
 
 ## Related
 
