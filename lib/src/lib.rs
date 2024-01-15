@@ -4,7 +4,6 @@ use sdl2::keyboard::Keycode;
 use sdl2::keyboard::Mod;
 use sdl2::mouse::{Cursor, MouseButton, SystemCursor};
 use sdl2::video::Window;
-
 pub struct FusedCursor {
     pub cursor: sdl2::mouse::Cursor,
     pub icon: sdl2::mouse::SystemCursor,
@@ -125,7 +124,6 @@ impl EguiSDL2State {
             },
             MouseButtonDown { mouse_btn, .. } => {
                 if let Some(pressed) = sdl_button_to_egui(mouse_btn) {
-                    println!("press event!");
                     self.raw_input.events.push(egui::Event::PointerButton {
                         pos: self.mouse_pointer_position,
                         button: pressed,
@@ -181,6 +179,7 @@ impl EguiSDL2State {
                 self.raw_input.events.push(egui::Event::Key {
                     key,
                     pressed: false,
+                    repeat: false,
                     modifiers: self.modifiers,
                 });
             }
@@ -214,6 +213,7 @@ impl EguiSDL2State {
                 self.raw_input.events.push(egui::Event::Key {
                     key,
                     pressed: true,
+                    repeat: false,
                     modifiers: self.modifiers,
                 });
 
@@ -279,7 +279,6 @@ impl EguiSDL2State {
         let screen_rect = Rect::from_min_size(Pos2::new(0f32, 0f32), rect);
         let raw_input = RawInput {
             screen_rect: Some(screen_rect),
-            pixels_per_point: Some(dpi_scaling),
             ..RawInput::default()
         };
         let modifiers = Modifiers::default();
