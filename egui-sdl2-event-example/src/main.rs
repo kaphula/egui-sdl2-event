@@ -4,28 +4,31 @@ use core::default::Default;
 use egui::mutex::RwLock;
 use egui::Rgba;
 use egui_sdl2_event::EguiSDL2State;
-use egui_wgpu::renderer;
-use egui_wgpu::renderer::Renderer;
+use egui_wgpu::{Renderer, ScreenDescriptor};
 use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::Keycode;
 use sdl2::video::Window;
 use sdl2::Sdl;
 use std::sync::Arc;
-use wgpu::{Device, Queue, Surface, SurfaceConfiguration};
+use egui_wgpu::wgpu::{CommandEncoderDescriptor, Device, DeviceDescriptor, InstanceDescriptor, PowerPreference, Queue, RenderPassColorAttachment, RenderPassDescriptor, RequestAdapterOptions, Surface, SurfaceConfiguration, SurfaceError, SurfaceTargetUnsafe, TextureViewDescriptor, WindowHandle};
+use egui_wgpu::wgpu::rwh::{HandleError, HasWindowHandle};
 
 const INITIAL_WIDTH: u32 = 800;
 const INITIAL_HEIGHT: u32 = 600;
 
-struct WGPUSDL2 {
+struct WGPUSDL2<'a> {
     sdl_window: Window,
-    surface: Surface,
+    surface: Surface<'a>,
     device: Device,
     queue: Queue,
     sdl_context: Sdl,
     surface_config: SurfaceConfiguration,
 }
 
-fn init_sdl(width: u32, height: u32) -> WGPUSDL2 {
+
+
+
+fn init_sdl<'a>(width: u32, height: u32) -> WGPUSDL2<'a> {
     let sdl_context = sdl2::init().expect("Cannot initialize SDL2!");
     let video_subsystem = sdl_context.video().expect("Cannot get SDL2 context!");
     let window = video_subsystem
@@ -36,11 +39,23 @@ fn init_sdl(width: u32, height: u32) -> WGPUSDL2 {
         .map_err(|e| e.to_string())
         .expect("Cannot create SDL2 window!");
 
-    let instance = wgpu::Instance::default();
-    #[allow(unsafe_code)]
-    let surface = unsafe { instance.create_surface(&window).unwrap() };
-    let adapter_opt = pollster::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
-        power_preference: wgpu::PowerPreference::HighPerformance,
+    let instance = egui_wgpu::wgpu::Instance::new(InstanceDescriptor::default());
+    let surface = unsafe {
+        match instance
+            .create_surface_unsafe(SurfaceTargetUnsafe::from_window(&window).unwrap())
+        {
+            Ok(s) => s,
+            Err(e) => panic!("bummer!")
+        }
+    };
+    let power_pref = PowerPreference::default();
+    //let instance = wgpu::Instance::default();
+    //#[allow(unsafe_code)]
+    //let surface = instance.create_surface(window.clone()).unwrap();
+
+
+    let adapter_opt = pollster::block_on(instance.request_adapter(&RequestAdapterOptions {
+        power_preference: PowerPreference::HighPerformance,
         force_fallback_adapter: false,
         compatible_surface: Some(&surface),
     }));
@@ -50,10 +65,10 @@ fn init_sdl(width: u32, height: u32) -> WGPUSDL2 {
     };
 
     let (device, queue) = match pollster::block_on(adapter.request_device(
-        &wgpu::DeviceDescriptor {
-            limits: wgpu::Limits::default(),
+        &DeviceDescriptor {
             label: Some("device"),
-            features: wgpu::Features::empty(),
+            required_features: Default::default(),
+            required_limits: Default::default(),
         },
         None,
     )) {
@@ -87,7 +102,7 @@ fn paint_and_update_textures(
 ) {
     let output_frame = match surface.get_current_texture() {
         Ok(frame) => frame,
-        Err(wgpu::SurfaceError::Outdated) => {
+        Err(SurfaceError::Outdated) => {
             return;
         }
         Err(_) => {
@@ -95,12 +110,12 @@ fn paint_and_update_textures(
         }
     };
 
-    let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
+    let mut encoder = device.create_command_encoder(&CommandEncoderDescriptor {
         label: Some("encoder"),
     });
 
     // Upload all resources for the GPU.
-    let screen_descriptor = renderer::ScreenDescriptor {
+    let screen_descriptor = ScreenDescriptor {
         size_in_pixels: [surface_config.width, surface_config.height],
         pixels_per_point,
     };
@@ -125,24 +140,25 @@ fn paint_and_update_textures(
 
         let frame_view = output_frame
             .texture
-            .create_view(&wgpu::TextureViewDescriptor::default());
+            .create_view(&TextureViewDescriptor::default());
 
         let (view, resolve_target) = (&frame_view, None);
 
-        let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+        let mut render_pass = encoder.begin_render_pass(&RenderPassDescriptor {
             label: Some("egui_render"),
-            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+            color_attachments: &[Some(RenderPassColorAttachment {
                 view,
                 resolve_target,
-                ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color {
-                        r: clear_color[0] as f64,
-                        g: clear_color[1] as f64,
-                        b: clear_color[2] as f64,
-                        a: clear_color[3] as f64,
-                    }),
-                    store: wgpu::StoreOp::Store,
-                },
+                //ops: wgpu::Operations {
+                //    load: wgpu::LoadOp::Clear(wgpu::Color {
+                //        r: clear_color[0] as f64,
+                //        g: clear_color[1] as f64,
+                //        b: clear_color[2] as f64,
+                //        a: clear_color[3] as f64,
+                //    }),
+                //    store: wgpu::StoreOp::Store,
+                //},
+                ops: Default::default(),
             })],
             depth_stencil_attachment: None,
             timestamp_writes: None,
