@@ -1,16 +1,14 @@
-#![cfg_attr(feature = "cargo-clippy", allow(redundant_field_names))]
+#![allow(clippy::redundant_field_names)]
 
 mod frame_timer;
 use crate::frame_timer::FrameTimer;
 use core::default::Default;
 use egui::mutex::RwLock;
 use egui_sdl2_event::EguiSDL2State;
-use egui_wgpu::wgpu::rwh::{HandleError, HasWindowHandle};
 use egui_wgpu::wgpu::{
-    CommandEncoderDescriptor, Device, DeviceDescriptor, InstanceDescriptor, LoadOp, Operations,
+    CommandEncoderDescriptor, Device, DeviceDescriptor, InstanceDescriptor, Operations,
     PowerPreference, Queue, RenderPassColorAttachment, RenderPassDescriptor, RequestAdapterOptions,
     Surface, SurfaceConfiguration, SurfaceError, SurfaceTargetUnsafe, TextureViewDescriptor,
-    WindowHandle,
 };
 use egui_wgpu::{Renderer, ScreenDescriptor};
 use sdl2::event::{Event, WindowEvent};

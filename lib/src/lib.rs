@@ -1,4 +1,4 @@
-#![cfg_attr(feature = "cargo-clippy", allow(redundant_field_names))]
+#![allow(clippy::redundant_field_names)]
 
 use egui::{Key, Modifiers, MouseWheelUnit, PointerButton, Pos2, RawInput, Rect};
 use sdl2::event::WindowEvent;
