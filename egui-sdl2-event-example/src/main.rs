@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "cargo-clippy", allow(redundant_field_names))]
+
 mod frame_timer;
 use crate::frame_timer::FrameTimer;
 use core::default::Default;

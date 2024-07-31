@@ -11,7 +11,6 @@ readme = "README.md"
 repository = "https://github.com/kaphula/egui-sdl2-event"
 homepage = "https://github.com/kaphula/egui-sdl2-event"
 
-
 [dependencies]
 sdl2 = { version= "0.37.0", features = ["raw-window-handle",  "bundled", "static-link"] }
 egui = "0.28.1"

@@ -1,9 +1,14 @@
+#![cfg_attr(feature = "cargo-clippy", allow(redundant_field_names))]
+
 use egui::{Key, Modifiers, MouseWheelUnit, PointerButton, Pos2, RawInput, Rect};
 use sdl2::event::WindowEvent;
 use sdl2::keyboard::Keycode;
 use sdl2::keyboard::Mod;
 use sdl2::mouse::{Cursor, MouseButton, SystemCursor};
 use sdl2::video::Window;
+
+
+
 pub struct FusedCursor {
     pub cursor: sdl2::mouse::Cursor,
     pub icon: sdl2::mouse::SystemCursor,
