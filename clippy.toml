@@ -1,0 +1,2 @@
+# // #![cfg_attr(feature = "cargo-clippy", allow(redundant_field_names))]
+redundant_field_names = false
