@@ -2,16 +2,20 @@ mod frame_timer;
 use crate::frame_timer::FrameTimer;
 use core::default::Default;
 use egui::mutex::RwLock;
-use egui::Rgba;
 use egui_sdl2_event::EguiSDL2State;
+use egui_wgpu::wgpu::rwh::{HandleError, HasWindowHandle};
+use egui_wgpu::wgpu::{
+    CommandEncoderDescriptor, Device, DeviceDescriptor, InstanceDescriptor, LoadOp, Operations,
+    PowerPreference, Queue, RenderPassColorAttachment, RenderPassDescriptor, RequestAdapterOptions,
+    Surface, SurfaceConfiguration, SurfaceError, SurfaceTargetUnsafe, TextureViewDescriptor,
+    WindowHandle,
+};
 use egui_wgpu::{Renderer, ScreenDescriptor};
 use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::Keycode;
 use sdl2::video::Window;
 use sdl2::Sdl;
 use std::sync::Arc;
-use egui_wgpu::wgpu::{CommandEncoderDescriptor, Device, DeviceDescriptor, InstanceDescriptor, PowerPreference, Queue, RenderPassColorAttachment, RenderPassDescriptor, RequestAdapterOptions, Surface, SurfaceConfiguration, SurfaceError, SurfaceTargetUnsafe, TextureViewDescriptor, WindowHandle};
-use egui_wgpu::wgpu::rwh::{HandleError, HasWindowHandle};
 
 const INITIAL_WIDTH: u32 = 800;
 const INITIAL_HEIGHT: u32 = 600;
@@ -24,9 +28,6 @@ struct WGPUSDL2<'a> {
     sdl_context: Sdl,
     surface_config: SurfaceConfiguration,
 }
-
-
-
 
 fn init_sdl<'a>(width: u32, height: u32) -> WGPUSDL2<'a> {
     let sdl_context = sdl2::init().expect("Cannot initialize SDL2!");
@@ -41,21 +42,13 @@ fn init_sdl<'a>(width: u32, height: u32) -> WGPUSDL2<'a> {
 
     let instance = egui_wgpu::wgpu::Instance::new(InstanceDescriptor::default());
     let surface = unsafe {
-        match instance
-            .create_surface_unsafe(SurfaceTargetUnsafe::from_window(&window).unwrap())
-        {
+        match instance.create_surface_unsafe(SurfaceTargetUnsafe::from_window(&window).unwrap()) {
             Ok(s) => s,
-            Err(e) => panic!("bummer!")
+            Err(e) => panic!("Failed to create window surface!"),
         }
     };
-    let power_pref = PowerPreference::default();
-    //let instance = wgpu::Instance::default();
-    //#[allow(unsafe_code)]
-    //let surface = instance.create_surface(window.clone()).unwrap();
-
-
     let adapter_opt = pollster::block_on(instance.request_adapter(&RequestAdapterOptions {
-        power_preference: PowerPreference::HighPerformance,
+        power_preference: PowerPreference::None,
         force_fallback_adapter: false,
         compatible_surface: Some(&surface),
     }));
@@ -96,7 +89,6 @@ fn paint_and_update_textures(
     surface_config: &SurfaceConfiguration,
     egui_renderer: Arc<RwLock<Renderer>>,
     pixels_per_point: f32,
-    clear_color: egui::Rgba,
     clipped_primitives: &[egui::ClippedPrimitive],
     textures_delta: &egui::TexturesDelta,
 ) {
@@ -147,18 +139,9 @@ fn paint_and_update_textures(
         let mut render_pass = encoder.begin_render_pass(&RenderPassDescriptor {
             label: Some("egui_render"),
             color_attachments: &[Some(RenderPassColorAttachment {
-                view,
-                resolve_target,
-                //ops: wgpu::Operations {
-                //    load: wgpu::LoadOp::Clear(wgpu::Color {
-                //        r: clear_color[0] as f64,
-                //        g: clear_color[1] as f64,
-                //        b: clear_color[2] as f64,
-                //        a: clear_color[3] as f64,
-                //    }),
-                //    store: wgpu::StoreOp::Store,
-                //},
-                ops: Default::default(),
+                view: view,
+                resolve_target: resolve_target,
+                ops: Operations::default(),
             })],
             depth_stencil_attachment: None,
             timestamp_writes: None,
@@ -271,7 +254,6 @@ fn main() {
             &sys.surface_config,
             egui_renderer.clone(),
             egui_sdl2_state.dpi_scaling,
-            Rgba::from_rgb(0.0, 0.0, 0.0),
             &tris,
             &full_output.textures_delta,
         );
