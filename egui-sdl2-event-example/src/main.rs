@@ -44,7 +44,7 @@ fn init_sdl<'a>(width: u32, height: u32) -> WGPUSDL2<'a> {
     let surface = unsafe {
         match instance.create_surface_unsafe(SurfaceTargetUnsafe::from_window(&window).unwrap()) {
             Ok(s) => s,
-            Err(e) => panic!("Failed to create window surface!"),
+            Err(_) => panic!("Failed to create window surface!"),
         }
     };
     let adapter_opt = pollster::block_on(instance.request_adapter(&RequestAdapterOptions {
@@ -62,6 +62,7 @@ fn init_sdl<'a>(width: u32, height: u32) -> WGPUSDL2<'a> {
             label: Some("device"),
             required_features: Default::default(),
             required_limits: Default::default(),
+            ..Default::default()
         },
         None,
     )) {
@@ -136,17 +137,19 @@ fn paint_and_update_textures(
 
         let (view, resolve_target) = (&frame_view, None);
 
-        let mut render_pass = encoder.begin_render_pass(&RenderPassDescriptor {
-            label: Some("egui_render"),
-            color_attachments: &[Some(RenderPassColorAttachment {
-                view: view,
-                resolve_target: resolve_target,
-                ops: Operations::default(),
-            })],
-            depth_stencil_attachment: None,
-            timestamp_writes: None,
-            occlusion_query_set: None,
-        });
+        let mut render_pass = encoder
+            .begin_render_pass(&RenderPassDescriptor {
+                label: Some("egui_render"),
+                color_attachments: &[Some(RenderPassColorAttachment {
+                    view,
+                    resolve_target,
+                    ops: Operations::default(),
+                })],
+                depth_stencil_attachment: None,
+                timestamp_writes: None,
+                occlusion_query_set: None,
+            })
+            .forget_lifetime();
 
         renderer.render(&mut render_pass, clipped_primitives, &screen_descriptor);
     }
@@ -178,6 +181,7 @@ fn main() {
         sys.surface_config.format,
         None,
         1,
+        true,
     )));
 
     let mut frame_timer = FrameTimer::new();
