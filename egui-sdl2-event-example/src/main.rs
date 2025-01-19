@@ -154,18 +154,21 @@ fn paint_and_update_textures(
         renderer.render(&mut render_pass, clipped_primitives, &screen_descriptor);
     }
 
-    {
-        let mut rpass = egui_renderer.write();
-        for id in &textures_delta.free {
-            rpass.free_texture(id);
-        }
-    }
 
     // Submit the commands.
     queue.submit(std::iter::once(encoder.finish()));
 
+
     // Redraw egui
     output_frame.present();
+
+
+   {
+      let mut rpass = egui_renderer.write();
+      for id in &textures_delta.free {
+         rpass.free_texture(id);
+      }
+   }
 }
 
 fn main() {
