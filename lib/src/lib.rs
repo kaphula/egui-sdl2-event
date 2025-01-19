@@ -7,8 +7,6 @@ use sdl2::keyboard::Mod;
 use sdl2::mouse::{Cursor, MouseButton, SystemCursor};
 use sdl2::video::Window;
 
-
-
 pub struct FusedCursor {
     pub cursor: sdl2::mouse::Cursor,
     pub icon: sdl2::mouse::SystemCursor,
