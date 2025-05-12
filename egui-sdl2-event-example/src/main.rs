@@ -40,7 +40,7 @@ fn init_sdl<'a>(width: u32, height: u32) -> WGPUSDL2<'a> {
         .map_err(|e| e.to_string())
         .expect("Cannot create SDL2 window!");
 
-    let instance = egui_wgpu::wgpu::Instance::new(InstanceDescriptor::default());
+    let instance = egui_wgpu::wgpu::Instance::new(&InstanceDescriptor::default());
     let surface = unsafe {
         match instance.create_surface_unsafe(SurfaceTargetUnsafe::from_window(&window).unwrap()) {
             Ok(s) => s,
