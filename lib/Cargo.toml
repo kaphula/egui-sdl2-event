@@ -13,4 +13,4 @@ homepage = "https://github.com/kaphula/egui-sdl2-event"
 
 [dependencies]
 sdl2 = { version= "0.37.0", features = ["raw-window-handle"] }
-egui = { version = "0.30" }
+egui = { version = "0.31.1" }
