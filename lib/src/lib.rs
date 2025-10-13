@@ -301,16 +301,18 @@ impl EguiSDL2State {
     }
 
     pub fn process_output(&mut self, window: &Window, egui_output: &egui::PlatformOutput) {
-        if !egui_output.copied_text.is_empty() {
-            let copied_text = egui_output.copied_text.clone();
-            {
-                let result = window
-                    .subsystem()
-                    .clipboard()
-                    .set_clipboard_text(&copied_text);
-                if result.is_err() {
-                    dbg!("Unable to set clipboard content to SDL clipboard.");
+        for command in &egui_output.commands {
+            match command {
+                egui::OutputCommand::CopyText(copied_text) => {
+                    let result = window
+                        .subsystem()
+                        .clipboard()
+                        .set_clipboard_text(&copied_text);
+                    if result.is_err() {
+                        dbg!("Unable to set clipboard content to SDL clipboard.");
+                    }
                 }
+                _ => {}
             }
         }
         EguiSDL2State::translate_cursor(&mut self.fused_cursor, egui_output.cursor_icon);

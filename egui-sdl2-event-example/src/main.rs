@@ -47,14 +47,13 @@ fn init_sdl<'a>(width: u32, height: u32) -> WGPUSDL2<'a> {
             Err(_) => panic!("Failed to create window surface!"),
         }
     };
-    let adapter_opt = pollster::block_on(instance.request_adapter(&RequestAdapterOptions {
+    let adapter = match pollster::block_on(instance.request_adapter(&RequestAdapterOptions {
         power_preference: PowerPreference::None,
         force_fallback_adapter: false,
         compatible_surface: Some(&surface),
-    }));
-    let adapter = match adapter_opt {
-        Some(a) => a,
-        None => panic!("Failed to find wgpu adapter!"),
+    })) {
+        Ok(a) => a,
+        Err(_) => panic!("Failed to find wgpu adapter!"),
     };
 
     let (device, queue) = match pollster::block_on(adapter.request_device(
@@ -63,8 +62,7 @@ fn init_sdl<'a>(width: u32, height: u32) -> WGPUSDL2<'a> {
             required_features: Default::default(),
             required_limits: Default::default(),
             ..Default::default()
-        },
-        None,
+        }
     )) {
         Ok(a) => a,
         Err(e) => panic!("{}", e.to_string()),
