@@ -4,3 +4,8 @@ members = [
     "lib",
     "egui-sdl2-event-example"
 ]
+
+
+[workspace.dependencies]
+sdl2 = { version= "0.38.0", features = ["raw-window-handle"] }
+egui = { version = "0.32.3" }

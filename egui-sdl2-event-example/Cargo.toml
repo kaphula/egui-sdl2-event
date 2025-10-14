@@ -3,8 +3,8 @@ name = "egui-sdl2-event-example"
 edition = "2021"
 
 [dependencies]
-sdl2 = { version= "0.37.0", features = ["raw-window-handle"] }
+sdl2.workspace = true
+egui.workspace = true
 egui-sdl2-event = { path = "../lib" }
-egui-wgpu = {version =  "0.31.1" }
-egui = "0.31.1"
+egui-wgpu = {version =  "0.32.3" }
 pollster = "0.2.5"
