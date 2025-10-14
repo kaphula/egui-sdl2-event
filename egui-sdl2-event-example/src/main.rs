@@ -56,14 +56,12 @@ fn init_sdl<'a>(width: u32, height: u32) -> WGPUSDL2<'a> {
         Err(_) => panic!("Failed to find wgpu adapter!"),
     };
 
-    let (device, queue) = match pollster::block_on(adapter.request_device(
-        &DeviceDescriptor {
-            label: Some("device"),
-            required_features: Default::default(),
-            required_limits: Default::default(),
-            ..Default::default()
-        }
-    )) {
+    let (device, queue) = match pollster::block_on(adapter.request_device(&DeviceDescriptor {
+        label: Some("device"),
+        required_features: Default::default(),
+        required_limits: Default::default(),
+        ..Default::default()
+    })) {
         Ok(a) => a,
         Err(e) => panic!("{}", e.to_string()),
     };
