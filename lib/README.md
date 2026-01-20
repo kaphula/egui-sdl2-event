@@ -9,11 +9,18 @@ Most of the code is just adaptively copied from [egui_sdl2_gl](https://github.co
 
 Simple [example](https://github.com/kaphula/egui-sdl2-event/tree/master/egui-sdl2-event-example) program.
 
-
 ## Changes
+
+### 1.33.3
+
+- Update egui to `1.33.3`
+
+### 1.32.3
+
+- Update egui to `1.32.3`
 
 ### 1.31.1
 
 - Update egui to `1.31.1`
-- Bump the version to follow egui version. 
+- Bump the version to follow egui version.
 - Change example to dynamic linking TODO
