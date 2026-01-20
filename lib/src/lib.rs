@@ -2,8 +2,7 @@
 
 use egui::{Key, Modifiers, MouseWheelUnit, PointerButton, Pos2, RawInput, Rect};
 use sdl2::event::WindowEvent;
-use sdl2::keyboard::Keycode;
-use sdl2::keyboard::Mod;
+use sdl2::keyboard::{Keycode, Mod};
 use sdl2::mouse::{Cursor, MouseButton, SystemCursor};
 use sdl2::video::Window;
 
@@ -316,20 +315,6 @@ impl EguiSDL2State {
             }
         }
         EguiSDL2State::translate_cursor(&mut self.fused_cursor, egui_output.cursor_icon);
-
-        //if !egui_output.copied_text.is_empty() {
-        //    let copied_text = egui_output.copied_text.clone();
-        //    {
-        //        let result = window
-        //            .subsystem()
-        //            .clipboard()
-        //            .set_clipboard_text(&copied_text);
-        //        if result.is_err() {
-        //            dbg!("Unable to set clipboard content to SDL clipboard.");
-        //        }
-        //    }
-        //}
-        //EguiSDL2State::translate_cursor(&mut self.fused_cursor, egui_output.cursor_icon);
     }
 
     fn translate_cursor(fused: &mut FusedCursor, cursor_icon: egui::CursorIcon) {
