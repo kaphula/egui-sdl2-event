@@ -3,7 +3,7 @@ name = "egui-sdl2-event-example"
 edition = "2021"
 
 [dependencies]
-sdl2 = { version= "0.37.0", features = ["raw-window-handle"] }
+sdl2 = { version= "0.38.0", features = ["raw-window-handle"] }
 egui-sdl2-event = { path = "../lib" }
 egui-wgpu = {version =  "0.31.1" }
 egui = "0.31.1"
