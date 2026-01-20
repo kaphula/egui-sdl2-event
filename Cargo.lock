@@ -213,7 +213,7 @@ dependencies = [
 
 [[package]]
 name = "egui-sdl2-event"
-version = "1.31.1"
+version = "1.33.3"
 dependencies = [
  "egui",
  "sdl2",
